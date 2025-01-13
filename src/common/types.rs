@@ -7,7 +7,7 @@ pub enum Brand {
 }
 
 pub struct Order {
-    pub id: Option<i32>,
+    pub id: i32,
     pub brand: Brand,
     pub price: f64,
     pub quantity: i32,
@@ -25,7 +25,7 @@ pub struct Chassis {
 }
 
 pub struct SoldCar {
-    pub id: Option<i32>,
+    pub id: i32,
     pub order_id: i32,
     pub brand: Brand,
     pub price: f64,
