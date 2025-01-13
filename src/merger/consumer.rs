@@ -1,5 +1,7 @@
 use kafka::consumer::{Consumer, FetchOffset, GroupOffsetStorage};
 
+use crate::common::types::{Order, Wheel, Chassis};
+
 pub fn create_consumer() {
   let mut messages = Vec::new();  // List to store the retrieved messages.
   let mut consumer =
