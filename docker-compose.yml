@@ -46,6 +46,7 @@ services:
         /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:19092 --topic Order --partitions 1 --replication-factor 1 &&
         /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:19092 --topic Wheel --partitions 1 --replication-factor 1 &&
         /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:19092 --topic Chassis --partitions 1 --replication-factor 1;
+        /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:19092 --topic SoldCar --partitions 1 --replication-factor 1 &&
         echo "Kafka initialization complete.";'
 
 
