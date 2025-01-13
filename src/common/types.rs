@@ -26,7 +26,6 @@ pub struct Chassis {
 
 pub struct SoldCar {
     pub id: i32,
-    pub order_id: i32,
     pub brand: Brand,
     pub price: f64,
     pub created_at: i64,
