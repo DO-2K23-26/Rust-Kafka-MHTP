@@ -4,7 +4,7 @@ use kafka::{
 };
 
 pub fn get_consumer(topic: &str) -> Result<Consumer, kafka::Error> {
-    let consumer = Consumer::from_hosts(vec!["localhost:9092".to_string()])
+    let consumer = Consumer::from_hosts(vec!["localhost:19092".to_string()])
         // .with_topic_partitions(topic.to_owned(), &[0])
         .with_topic(topic.to_string())
         .with_fallback_offset(FetchOffset::Earliest)
