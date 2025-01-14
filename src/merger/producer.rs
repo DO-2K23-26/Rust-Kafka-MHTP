@@ -1,6 +1,8 @@
 use std::fmt::Write;
 use std::time::Duration;
 use kafka::producer::{Producer, Record, RequiredAcks};
+use serde::{Serialize, Deserialize};
+use bincode;
 
 pub fn create_producer() {
   let mut producer = Producer::from_hosts(vec!("localhost:9092".to_owned()))
@@ -25,4 +27,13 @@ pub fn create_producer() {
     producer.send(&Record::from_value("orders", buf.as_bytes())).unwrap();
     buf.clear();
   }
+
+  #[derive(Serialize, Deserialize)]
+  struct LePwet {
+    pwetting_level: String,
+  }
+  let pwetter = LePwet { pwetting_level: String::from("aae") };
+
+  let encoded: Vec<u8> = bincode::serialize(&pwetter).unwrap();
+  producer.send(&Record::from_value("orders", encoded.as_slice())).unwrap();
 }
