@@ -1,10 +1,19 @@
+use aws_types::credentials::SharedCredentialsProvider;
+use aws_types::Credentials;
+// use aws_credential_types::provider::Credentials;
+use aws_sdk_s3::Endpoint;
 use datafusion::arrow::array::{Array, StringArray};
 use datafusion::arrow::datatypes::{DataType, Field, Schema};
 use datafusion::arrow::record_batch::RecordBatch;
 use datafusion::physical_plan::memory::MemoryExec;
 use datafusion::prelude::SessionContext;
 use datafusion::prelude::*;
+use datafusion_data_access::object_store::ObjectStore;
+use datafusion_objectstore_s3::object_store;
+use datafusion_objectstore_s3::object_store::s3::S3FileSystem;
+use http::Uri;
 use std::sync::Arc;
+use url::Url;
 use Rust_Kafka_MHT::common::consumer;
 
 #[tokio::main]
@@ -17,6 +26,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         false,
     )]));
 
+    const MINIO_ACCESS_KEY_ID: &str = "AKIAIOSFODNN7EXAMPLE";
+    const MINIO_SECRET_ACCESS_KEY: &str = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";
+    const PROVIDER_NAME: &str = "Static";
+    const MINIO_ENDPOINT: &str = "http://localhost:9001";
+
+    let s3_file_system = S3FileSystem::new(
+        Some(SharedCredentialsProvider::new(Credentials::new(
+            MINIO_ACCESS_KEY_ID,
+            MINIO_SECRET_ACCESS_KEY,
+            None,
+            None,
+            PROVIDER_NAME,
+        ))), // Credentials provider
+        None,                                                        // Region
+        Some(Endpoint::immutable(Uri::from_static(MINIO_ENDPOINT))), // Endpoint
+        None,                                                        // RetryConfig
+        None,                                                        // AsyncSleep
+        None,                                                        // TimeoutConfig
+    )
+    .await;
+    let s3_url = Url::parse("s3://")?;
+    let s3_store: Arc<dyn ObjectStore> = Arc::new(s3_file_system);
+    ctx.register_object_store(&s3_url, s3_store);
+
     loop {
         let mut messages = Vec::new();
         for ms in consumer.poll().unwrap().iter() {
@@ -28,7 +61,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let _ = consumer.consume_messageset(ms);
         }
         consumer.commit_consumed().unwrap();
-        if !messages.is_empty() {   
+        if !messages.is_empty() {
             let array = Arc::new(StringArray::from(messages)) as Arc<dyn Array>;
             let record_batch = RecordBatch::try_new(schema.clone(), vec![array])?;
             let execution_plan = Arc::new(MemoryExec::try_new(
@@ -37,9 +70,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 None,
             )?);
 
-            ctx.write_parquet(execution_plan, "kafka_output.parquet", None)
+            ctx.write_parquet(execution_plan, "s3://bucket/kafka_output.parquet", None)
                 .await?;
-            let dataframe = ctx.read_parquet("kafka_output.parquet", ParquetReadOptions::default()).await?;
+            let dataframe = ctx
+                .read_parquet(
+                    "s3://bucket/kafka_output.parquet",
+                    ParquetReadOptions::default(),
+                )
+                .await?;
             dataframe.show().await?;
         }
     }
