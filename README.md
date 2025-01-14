@@ -50,3 +50,17 @@ Topic client orders:
 
 
 
+
+
+## Utils
+
+Read messages from a topic: 
+
+```bash
+docker exec --workdir /opt/kafka/bin/ -it kafka sh ./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic Order --from-beginning
+```
+
+Send a message in a thread:
+```bash
+docker exec --workdir /opt/kafka/bin/ -it kafka sh ./kafka-console-producer.sh --bootstrap-server localhost:9092 --topic Order
+```
