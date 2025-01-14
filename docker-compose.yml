@@ -105,3 +105,19 @@ services:
             docker-kafka-server:
               properties:
                 bootstrap.servers: "broker-1:19092,broker-2:19092"
+  minio:
+    image: quay.io/minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ${HOME}/minio/data:/data
+    command: server /data --console-address ":9001"
+    depends_on:
+      - create-data-dir
+
+  create-data-dir:
+    image: busybox
+    command: mkdir -p /data
+    volumes:
+      - ${HOME}/minio/data:/data
