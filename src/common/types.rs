@@ -1,3 +1,6 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
 pub enum Brand {
     FERRARI,
     RENAULT,
@@ -6,6 +9,7 @@ pub enum Brand {
     BMW,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Order {
     pub id: i32,
     pub brand: Brand,
@@ -14,16 +18,19 @@ pub struct Order {
     pub created_at: i64,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Wheel {
     pub brand: Brand,
     pub price: f64,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Chassis {
     pub brand: Brand,
     pub price: f64,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct SoldCar {
     pub id: i32,
     pub brand: Brand,
@@ -31,8 +38,13 @@ pub struct SoldCar {
     pub created_at: i64,
 }
 
-impl Order {
-    pub fn generate() -> Order {
+pub trait Emittable: Serialize {
+    fn generate() -> Self;
+    fn get_topic_name() -> String;
+}
+
+impl Emittable for Order {
+    fn generate() -> Order {
         use rand::Rng;
         let mut rng = rand::thread_rng();
 
@@ -50,10 +62,14 @@ impl Order {
             created_at: chrono::Utc::now().timestamp(),
         }
     }
+
+    fn get_topic_name() -> String {
+        "Order".to_owned()
+    }
 }
 
-impl Wheel {
-    pub fn generate() -> Wheel {
+impl Emittable for Wheel {
+    fn generate() -> Wheel {
         use rand::Rng;
         let mut rng = rand::thread_rng();
 
@@ -68,10 +84,13 @@ impl Wheel {
             price: rng.gen_range(100.0..1000.0),
         }
     }
+    fn get_topic_name() -> String {
+        "Wheel".to_owned()
+    }
 }
 
-impl Chassis {
-    pub fn generate() -> Chassis {
+impl Emittable for Chassis {
+     fn generate() -> Chassis {
         use rand::Rng;
         let mut rng = rand::thread_rng();
 
@@ -85,5 +104,8 @@ impl Chassis {
             },
             price: rng.gen_range(5000.0..20000.0),
         }
+    }
+    fn get_topic_name() -> String {
+        "Chassis".to_owned()
     }
 }
