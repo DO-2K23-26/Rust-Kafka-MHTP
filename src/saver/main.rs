@@ -1,12 +1,16 @@
+use datafusion::parquet::file::properties::WriterProperties;
 use datafusion::prelude::SessionContext;
 // use aws_credential_types::provider::Credentials;
 use Rust_Kafka_MHT::common::consumer;
 use Rust_Kafka_MHT::common::types::SoldCar;
 
 mod batch_converter;
+
+const MAX_BATCH_SIZE: usize = 4000;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut consumer = consumer::get_consumer("Order")?;
+    let mut consumer = consumer::get_consumer("SoldCar")?;
     let ctx = SessionContext::new();
 
     // const MINIO_ACCESS_KEY_ID: &str = "AKIAIOSFODNN7EXAMPLE";
@@ -32,37 +36,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // let s3_url = Url::parse("s3://")?;
     // let s3_store: Arc<dyn ObjectStore> = Arc::new(s3_file_system);
     // ctx.register_object_store(&s3_url, s3_store);
+    let mut sold_cars: [SoldCar; MAX_BATCH_SIZE] = [SoldCar::default(); MAX_BATCH_SIZE];
+    let mut cursor = 0;
+
 
     loop {
-        let mut sold_cars: Vec<SoldCar> = Vec::new();
-
         for ms in consumer.poll().unwrap().iter() {
             for m in ms.messages() {
-                let message_text = match serde_json::from_slice::<SoldCar>(m.value) {
+                let sold_car = match serde_json::from_slice::<SoldCar>(m.value) {
                     Ok(message) => message,
                     Err(e) => {
                         eprintln!("Error while deserializing message: {:?}", e);
                         continue;
                     }
                 };
-                sold_cars.push(message_text);
+                sold_cars[cursor] = sold_car;
+                cursor += 1;
+                if cursor == MAX_BATCH_SIZE {
+                    let execution_plan = batch_converter::convert(sold_cars.to_vec())?;
+                    ctx.write_parquet(execution_plan, "output", None).await?;
+                    cursor = 0;
+                };
             }
             let _ = consumer.consume_messageset(ms);
+            consumer.commit_consumed().unwrap();
         }
-
-        consumer.commit_consumed().unwrap();
-
-        if !sold_cars.is_empty() {
-            let execution_plan = batch_converter::convert(sold_cars)?;
-            ctx.write_parquet(execution_plan, "s3://bucket/kafka_output.parquet", None)
-                .await?;
-            // let dataframe = ctx
-            //     .read_parquet(
-            //         "s3://bucket/kafka_output.parquet",
-            //         ParquetReadOptions::default(),
-            //     )
-            //     .await?;
-            // dataframe.show().await?;
-        }
+        println!("{}",cursor)
     }
 }
