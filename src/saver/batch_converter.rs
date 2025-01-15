@@ -10,11 +10,12 @@ use datafusion::{
 use Rust_Kafka_MHT::common::types::SoldCar;
 
 pub fn convert(sold_cars: Vec<SoldCar>) -> Result<Arc<MemoryExec>, Box<dyn Error>> {
-    let schema = Arc::new(Schema::new(vec![Field::new(
-        "message",
-        DataType::Utf8,
-        false,
-    )]));
+    let schema = Arc::new(Schema::new(vec![
+        Field::new("id", DataType::Utf8, false),
+        Field::new("brand", DataType::Utf8, false),
+        Field::new("price", DataType::Float64, false),
+        Field::new("created_at", DataType::Int64, false),
+    ]));
 
     let array_id: Vec<String> = sold_cars.iter().map(|m| m.id.to_string()).collect();
     let array_brand: Vec<String> = sold_cars.iter().map(|m| m.brand.to_string()).collect();
@@ -26,7 +27,15 @@ pub fn convert(sold_cars: Vec<SoldCar>) -> Result<Arc<MemoryExec>, Box<dyn Error
     let df_array_price = Arc::new(Float64Array::from(array_price));
     let df_array_created_at = Arc::new(Int64Array::from(array_created_at));
 
-    let record_batch = RecordBatch::try_new(schema.clone(), vec![df_array_id, df_array_brand, df_array_price, df_array_created_at])?;
+    let record_batch = RecordBatch::try_new(
+        schema.clone(),
+        vec![
+            df_array_id,
+            df_array_brand,
+            df_array_price,
+            df_array_created_at,
+        ],
+    )?;
     let execution_plan = Arc::new(MemoryExec::try_new(
         &[vec![record_batch]],
         schema.clone(),

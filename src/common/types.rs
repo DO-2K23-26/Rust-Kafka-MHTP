@@ -2,13 +2,14 @@ use std::fmt::{Display, Formatter};
 use std::time::SystemTime;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Copy,PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy,Default,PartialEq)]
 pub enum Brand {
     FERRARI,
     RENAULT,
     PEUGEOT,
     CITROEN,
-    BMW,
+    #[default]
+    BMW, 
 }
 
 pub enum Component {
@@ -74,7 +75,7 @@ impl Consumable for Wheel {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize,Default, Copy, Clone)]
 pub struct SoldCar {
     pub id: i32,
     pub brand: Brand,
@@ -86,6 +87,33 @@ pub trait Emittable: Serialize {
     fn generate() -> Self;
     fn get_topic_name() -> String;
     fn get_frequency() -> u64; 
+}
+
+impl Emittable for SoldCar {
+    fn generate() -> SoldCar {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+
+        SoldCar {
+            id: rng.gen(),
+            brand: match rng.gen_range(0..5) {
+                0 => Brand::FERRARI,
+                1 => Brand::RENAULT,
+                2 => Brand::PEUGEOT,
+                3 => Brand::CITROEN,
+                _ => Brand::BMW,
+            },
+            price: rng.gen_range(20000.0..150000.0),
+            created_at: chrono::Utc::now().timestamp(),
+        }
+    }
+
+    fn get_topic_name() -> String {
+        "SoldCar".to_owned()
+    }
+    fn get_frequency() -> u64 {
+        1
+    }
 }
 
 impl Emittable for Order {
@@ -176,3 +204,4 @@ impl Display for Brand {
         }
     }
 }
+

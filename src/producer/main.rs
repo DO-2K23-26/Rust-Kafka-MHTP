@@ -8,13 +8,13 @@ use kafka::{
     producer::{Producer, Record},
 };
 use tokio::task::JoinSet;
-use Rust_Kafka_MHT::common::types::{Chassis, Emittable, Order, Wheel};
+use Rust_Kafka_MHT::common::types::{Chassis, Emittable, Order, SoldCar, Wheel};
 
 pub fn launch_producer<T>(producer_set: Arc<RwLock<JoinSet<()>>>)
 where
     T: Emittable + Send + Sync + 'static,
 {
-    let producer = Producer::from_hosts(vec!["localhost:9092".to_owned()])
+    let producer = Producer::from_hosts(vec!["localhost:19092".to_owned(),"localhost:29092".to_owned()])
         .with_ack_timeout(Duration::from_secs(1))
         .with_required_acks(RequiredAcks::One)
         .create()
@@ -41,9 +41,11 @@ async fn main() {
     let producer_set = JoinSet::new();
     let producer_arc = Arc::new(RwLock::new(producer_set));
     // Clone the client for each producer
-    launch_producer::<Order>(producer_arc.clone());
-    launch_producer::<Wheel>(producer_arc.clone());
-    launch_producer::<Chassis>(producer_arc.clone());
+    // launch_producer::<Order>(producer_arc.clone());
+    // launch_producer::<Wheel>(producer_arc.clone());
+    // launch_producer::<Chassis>(producer_arc.clone());
+    launch_producer::<SoldCar>(producer_arc.clone());
+    
     // Await all tasks
     let mut producer_lock = producer_arc.write().unwrap();
     while let Some(result) = producer_lock.join_next().await {
