@@ -1,10 +1,13 @@
 use bincode;
 use kafka::producer::{Producer, Record, RequiredAcks};
 use std::time::Duration;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 use crate::common::types::{Brand, SoldCar};
+use crate::merger::logic::{calculate_price, merge};
 
-pub fn create_producer() {
+pub fn create_producer(in_building_cars: InBuildingCar) {
     let mut producer = Producer::from_hosts(vec!["localhost:9092".to_owned()])
         .with_ack_timeout(Duration::from_secs(1))
         .with_required_acks(RequiredAcks::One)
