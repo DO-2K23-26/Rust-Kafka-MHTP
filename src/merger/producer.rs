@@ -11,7 +11,6 @@ pub fn create_producer() {
     .create()
     .unwrap();
 
-  let mut buf = String::with_capacity(2);
   for _ in 0..10 {
     // Here call the merge logic function
     let pwetter = SoldCar {
