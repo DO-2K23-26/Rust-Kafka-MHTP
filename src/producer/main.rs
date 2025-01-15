@@ -45,7 +45,6 @@ async fn main() {
     // launch_producer::<Wheel>(producer_arc.clone());
     // launch_producer::<Chassis>(producer_arc.clone());
     launch_producer::<SoldCar>(producer_arc.clone());
-    
     // Await all tasks
     let mut producer_lock = producer_arc.write().unwrap();
     while let Some(result) = producer_lock.join_next().await {
