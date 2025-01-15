@@ -32,3 +32,4 @@ aws-sdk-s3 = "0.9.0"
 http = "0.2.6"
 url = "2.5.4"
 datafusion-data-access = { version = "8.0.0" }
+object_store = { version = "0.11.2", features = ["aws", "serde", "serde_json"] }
