@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum Brand {
     FERRARI,
     RENAULT,
@@ -15,7 +15,7 @@ pub struct Order {
     pub brand: Brand,
     pub price: f64,
     pub quantity: i32,
-    pub created_at: i64,
+    pub created_at: u64,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -35,7 +35,7 @@ pub struct SoldCar {
     pub id: i32,
     pub brand: Brand,
     pub price: f64,
-    pub created_at: i64,
+    pub created_at: u64,
 }
 
 pub trait Emittable: Serialize {
