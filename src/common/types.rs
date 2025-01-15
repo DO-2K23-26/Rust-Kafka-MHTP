@@ -1,8 +1,8 @@
+use std::fmt::{Display, Formatter};
 use std::time::SystemTime;
+use serde::{Deserialize, Serialize};
 
-use serde::{Serialize, Deserialize};
-
-#[derive(Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Clone, Copy,PartialEq)]
 pub enum Brand {
     FERRARI,
     RENAULT,
@@ -161,5 +161,18 @@ impl Emittable for Chassis {
     }
     fn get_frequency() -> u64 {
         20
+    }
+}
+
+
+impl Display for Brand {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        match self {
+            Brand::FERRARI => write!(f, "FERRARI"),
+            Brand::RENAULT => write!(f, "RENAULT"),
+            Brand::PEUGEOT => write!(f, "PEUGEOT"),
+            Brand::CITROEN => write!(f, "CITROEN"),
+            Brand::BMW => write!(f, "BMW"),
+        }
     }
 }
