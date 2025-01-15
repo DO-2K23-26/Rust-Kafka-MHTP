@@ -1,25 +1,13 @@
-use aws_types::credentials::SharedCredentialsProvider;
-use aws_types::Credentials;
-// use aws_credential_types::provider::Credentials;
-use aws_sdk_s3::Endpoint;
-use datafusion::arrow::array::{Array, Int32Array, StringArray};
-use datafusion::arrow::datatypes::{DataType, Field, Schema};
-use datafusion::arrow::record_batch::RecordBatch;
-use datafusion::physical_plan::memory::MemoryExec;
 use datafusion::prelude::SessionContext;
-use Rust_Kafka_MHT::common::types::SoldCar;
-use std::sync::Arc;
+// use aws_credential_types::provider::Credentials;
 use Rust_Kafka_MHT::common::consumer;
+use Rust_Kafka_MHT::common::types::SoldCar;
 
+mod batch_converter;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut consumer = consumer::get_consumer("Order")?;
     let ctx = SessionContext::new();
-    let schema = Arc::new(Schema::new(vec![Field::new(
-        "message",
-        DataType::Utf8,
-        false,
-    )]));
 
     // const MINIO_ACCESS_KEY_ID: &str = "AKIAIOSFODNN7EXAMPLE";
     // const MINIO_SECRET_ACCESS_KEY: &str = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";
@@ -47,29 +35,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     loop {
         let mut sold_cars: Vec<SoldCar> = Vec::new();
-        
+
         for ms in consumer.poll().unwrap().iter() {
             for m in ms.messages() {
-                let message_text = String::from_utf8_lossy(m.value).to_string();
-                println!("{:?}", message_text);
+                let message_text = match serde_json::from_slice::<SoldCar>(m.value) {
+                    Ok(message) => message,
+                    Err(e) => {
+                        eprintln!("Error while deserializing message: {:?}", e);
+                        continue;
+                    }
+                };
                 sold_cars.push(message_text);
             }
             let _ = consumer.consume_messageset(ms);
         }
-        
-        consumer.commit_consumed().unwrap();
-        
-        if !sold_cars.is_empty() {
-            let array_id: Vec<String> = sold_cars.iter().map(|m| m.id.to_string()).collect();
-            let df_array_id = Arc::new(StringArray::from(array_id)); 
-            let record_batch = RecordBatch::try_new(schema.clone(), vec![df_array_id])?;
-            
-            let execution_plan = Arc::new(MemoryExec::try_new(
-                &[vec![record_batch]],
-                schema.clone(),
-                None,
-            )?);
 
+        consumer.commit_consumed().unwrap();
+
+        if !sold_cars.is_empty() {
+            let execution_plan = batch_converter::convert(sold_cars)?;
             ctx.write_parquet(execution_plan, "s3://bucket/kafka_output.parquet", None)
                 .await?;
             // let dataframe = ctx
