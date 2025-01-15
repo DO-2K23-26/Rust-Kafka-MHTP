@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
@@ -9,7 +11,13 @@ pub enum Brand {
     BMW,
 }
 
-#[derive(Serialize, Deserialize)]
+pub enum Component {
+    ORDER(Order),
+    CHASSIS(Chassis),
+    WHEEL(Wheel),
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Order {
     pub id: i32,
     pub brand: Brand,
@@ -18,16 +26,51 @@ pub struct Order {
     pub created_at: u64,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Wheel {
     pub brand: Brand,
     pub price: f64,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Chassis {
     pub brand: Brand,
     pub price: f64,
+}
+
+pub trait Consumable: Deserialize<'static> {
+    fn get_topic_name() -> String;
+    fn to_component(self) -> Component;
+}
+
+impl Consumable for Order {
+    fn get_topic_name() -> String {
+        "Order".to_owned()
+    }
+
+    fn to_component(self) -> Component {
+        Component::ORDER(self)
+    }
+}
+
+impl Consumable for Chassis {
+    fn get_topic_name() -> String {
+        "Chassis".to_owned()
+    }
+
+    fn to_component(self) -> Component {
+        Component::CHASSIS(self)
+    }
+}
+
+impl Consumable for Wheel {
+    fn get_topic_name() -> String {
+        "Wheel".to_owned()
+    }
+
+    fn to_component(self) -> Component {
+        Component::WHEEL(self)
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -60,7 +103,7 @@ impl Emittable for Order {
             },
             price: rng.gen_range(10000.0..100000.0),
             quantity: rng.gen_range(1..10),
-            created_at: chrono::Utc::now().timestamp(),
+            created_at: SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs(),
         }
     }
 
@@ -97,7 +140,7 @@ impl Emittable for Wheel {
 }
 
 impl Emittable for Chassis {
-     fn generate() -> Chassis {
+    fn generate() -> Chassis {
         use rand::Rng;
         let mut rng = rand::thread_rng();
 
