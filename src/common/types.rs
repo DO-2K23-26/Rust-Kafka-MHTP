@@ -41,6 +41,7 @@ pub struct SoldCar {
 pub trait Emittable: Serialize {
     fn generate() -> Self;
     fn get_topic_name() -> String;
+    fn get_frequency() -> u64; 
 }
 
 impl Emittable for Order {
@@ -66,6 +67,9 @@ impl Emittable for Order {
     fn get_topic_name() -> String {
         "Order".to_owned()
     }
+    fn get_frequency() -> u64 {
+        20
+    }
 }
 
 impl Emittable for Wheel {
@@ -87,6 +91,9 @@ impl Emittable for Wheel {
     fn get_topic_name() -> String {
         "Wheel".to_owned()
     }
+    fn get_frequency() -> u64 {
+        20
+    }
 }
 
 impl Emittable for Chassis {
@@ -107,5 +114,8 @@ impl Emittable for Chassis {
     }
     fn get_topic_name() -> String {
         "Chassis".to_owned()
+    }
+    fn get_frequency() -> u64 {
+        20
     }
 }

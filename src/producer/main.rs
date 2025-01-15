@@ -4,7 +4,7 @@ use std::{
 };
 
 use kafka::{
-    client::{KafkaClient, RequiredAcks},
+    client::RequiredAcks,
     producer::{Producer, Record},
 };
 use tokio::task::JoinSet;
@@ -14,10 +14,7 @@ pub fn launch_producer<T>(producer_set: Arc<RwLock<JoinSet<()>>>)
 where
     T: Emittable + Send + Sync + 'static,
 {
-    let mut client = KafkaClient::new(vec!["localhost:9092".to_owned()]);
-    client.load_metadata_all().unwrap();
-
-    let producer = Producer::from_client(client)
+    let producer = Producer::from_hosts(vec!["localhost:9092".to_owned()])
         .with_ack_timeout(Duration::from_secs(1))
         .with_required_acks(RequiredAcks::One)
         .create()
@@ -34,7 +31,7 @@ where
                 &topic_name,
                 serde_json::to_string(&T::generate()).unwrap(),
             ));
-            std::thread::sleep(Duration::from_millis(50));
+            std::thread::sleep(Duration::from_millis(T::get_frequency()));
         }
     });
 }
