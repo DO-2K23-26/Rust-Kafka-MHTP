@@ -9,6 +9,9 @@ use Rust_Kafka_MHT::merger::producer::create_producer;
 
 #[tokio::main]
 async fn main() {
+    // Initialize the logger service
+    env_logger::init();
+
     // Initialize the in-memory storage of cars being built and cars being sold
     let in_building_cars: Arc<RwLock<Vec<InBuildingCar>>> = Arc::new(RwLock::new(Vec::new()));
     let sold_cars: Arc<RwLock<Vec<SoldCar>>> = Arc::new(RwLock::new(Vec::new()));
