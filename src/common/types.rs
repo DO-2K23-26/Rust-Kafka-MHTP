@@ -97,7 +97,7 @@ impl Emittable for Wheel {
 }
 
 impl Emittable for Chassis {
-     fn generate() -> Chassis {
+    fn generate() -> Chassis {
         use rand::Rng;
         let mut rng = rand::thread_rng();
 
