@@ -26,6 +26,7 @@ pub struct Order {
     pub created_at: u64,
 }
 
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Wheel {
     pub brand: Brand,
@@ -38,7 +39,7 @@ pub struct Chassis {
     pub price: f64,
 }
 
-pub trait Consumable: Deserialize<'static> {
+pub trait Consumable: for<'de> Deserialize<'de> {
     fn get_topic_name() -> String;
     fn to_component(self) -> Component;
 }
