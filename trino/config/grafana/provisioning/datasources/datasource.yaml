@@ -1,0 +1,12 @@
+apiVersion: 1
+
+datasources:
+  - name: Trino
+    type: trino-datasource
+    access: proxy
+    url: http://trino:8080
+    basicAuth: false
+    isDefault: true
+    jsonData:
+      catalog: hive
+      schema: default
