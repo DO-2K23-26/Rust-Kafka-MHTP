@@ -1,9 +1,11 @@
 use datafusion::dataframe::DataFrameWriteOptions;
+use schema_registry_converter::async_impl::avro::AvroDecoder;
+use schema_registry_converter::async_impl::schema_registry::SrSettings;
+use serde_json::Value;
 use std::sync::Arc;
 
 use datafusion::execution::object_store::ObjectStoreUrl;
 use datafusion::prelude::SessionContext;
-use datafusion::prelude::DataFrame;
 use kafka::error::KafkaCode;
 use object_store::aws::AmazonS3Builder;
 // use aws_credential_types::provider::Credentials;
@@ -18,7 +20,8 @@ const NUMBER_OF_PARTITION: i32 = 2;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut handles = vec![];
 
-    for partition_id in 0..NUMBER_OF_PARTITION {
+    for partition_id in 0..NUMBER_OF_PARTITION{
+        println!("Launching consumer for partition {}", partition_id);
         let handle = tokio::spawn(async move {
             let mut consumer = match consumer::get_consumer("SoldCar", partition_id) {
                 Ok(c) => c,
@@ -41,8 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .with_allow_http(true)
                 .build() {
                 Ok(s3) => s3,
-                Err(e) => {
-                    eprintln!("Error building AmazonS3: {:?}", e);
+                Err(_) => {
                     return Err(Box::new(kafka::Error::Kafka(KafkaCode::ClusterAuthorizationFailed)));
                 }
             };
@@ -51,14 +53,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let mut sold_cars: [SoldCar; MAX_BATCH_SIZE] = [SoldCar::default(); MAX_BATCH_SIZE];
             let mut cursor = 0;
-            println!("before loop");
+            
+            let sr_settings = SrSettings::new("http://localhost:8085".to_string());
+            let decoder = AvroDecoder::new(sr_settings);
             loop {
-                println!("in looop");
                 for ms in consumer.poll().unwrap().iter() {
                     for m in ms.messages() {
-                        println!("in message");
-                        let sold_car = match serde_json::from_slice::<SoldCar>(m.value) {
-                            Ok(message) => message,
+                        let decoded_value =  decoder.decode(Some(m.value)).await.unwrap();
+                        let sold_car: SoldCar = match serde_json::from_value(Value::try_from(decoded_value.value).unwrap()){
+                            Ok(value) => value,
                             Err(e) => {
                                 eprintln!("Error while deserializing message: {:?}", e);
                                 continue;
@@ -83,7 +86,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     return Err(Box::new(kafka::Error::Kafka(KafkaCode::ClusterAuthorizationFailed)));
                                 }
                             };
-                            println!("wrote parquet");
                             cursor = 0;
                         };
                     }

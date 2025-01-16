@@ -29,6 +29,7 @@ where
     ])
     .with_ack_timeout(Duration::from_secs(1))
     .with_required_acks(RequiredAcks::One)
+    
     .create()
     .unwrap();
     let mut producer_lock = producer_set.write().unwrap();
@@ -61,9 +62,11 @@ async fn main() {
     let producer_set = JoinSet::new();
     let producer_arc = Arc::new(RwLock::new(producer_set));
 
-    launch_producer::<Order>(producer_arc.clone());
-    launch_producer::<Wheel>(producer_arc.clone());
-    launch_producer::<Chassis>(producer_arc.clone());
+    // launch_producer::<Order>(producer_arc.clone());
+    // launch_producer::<Wheel>(producer_arc.clone());
+    // launch_producer::<Chassis>(producer_arc.clone());
+    launch_producer::<SoldCar>(producer_arc.clone());
+
     // Await all tasks
     let mut producer_lock = producer_arc.write().unwrap();
     while let Some(result) = producer_lock.join_next().await {
