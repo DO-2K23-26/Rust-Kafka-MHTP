@@ -105,10 +105,3 @@ services:
             docker-kafka-server:
               properties:
                 bootstrap.servers: "broker-1:19092,broker-2:19092"
-      
-
-  create-data-dir:
-    image: busybox
-    command: mkdir -p /data
-    volumes:
-      - ${HOME}/minio/data:/data
