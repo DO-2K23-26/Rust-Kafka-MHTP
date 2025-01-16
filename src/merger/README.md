@@ -1,5 +1,10 @@
 # Merger service
 
+## Launching the merger
+
+Without logs: `cargo run --bin merger`.  
+With logs: `RUST_LOG=debug cargo run --bin merger`.
+
 ## What is the Merger?
 
 The Merger service is a kafka producer and consumer client.  
@@ -21,7 +26,6 @@ It will first be retrieved and stored by the saver service.
 In itself, the Merger builds and sells the cars, using kafka as a buffer and losing no components or orders.
 
 ## How is the Merger implemented?
-
 
 Implementation notes:
 
