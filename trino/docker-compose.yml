@@ -64,9 +64,9 @@ services:
     ports:
       - '9083:9083'
     volumes:
-      - ./config/hive/hive-site.xml:/opt/hive/conf/hive-site.xml
-      - ./config/hive/plugin/aws-java-sdk-bundle-1.11.1026.jar:/opt/hive/lib/aws-java-sdk-bundle-1.11.1026.jar
-      - ./config/hive/plugin/hadoop-aws-3.3.6.jar:/opt/hive/lib/hadoop-aws-3.3.6.jar
+      - ./trino/config/hive/hive-site.xml:/opt/hive/conf/hive-site.xml
+      - ./trino/config/hive/plugin/aws-java-sdk-bundle-1.11.1026.jar:/opt/hive/lib/aws-java-sdk-bundle-1.11.1026.jar
+      - ./trino/config/hive/plugin/hadoop-aws-3.3.6.jar:/opt/hive/lib/hadoop-aws-3.3.6.jar
 
   minio:
     image: minio/minio
