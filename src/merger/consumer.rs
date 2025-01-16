@@ -1,4 +1,7 @@
 use kafka::consumer::{Consumer, FetchOffset, GroupOffsetStorage};
+use schema_registry_converter::async_impl::avro::AvroDecoder;
+use schema_registry_converter::async_impl::schema_registry::SrSettings;
+use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::task::JoinSet;
@@ -25,11 +28,21 @@ pub async fn create_consumer<T>(
 
     let mut client_set_lock = client_set.write().await;
     client_set_lock.spawn(async move {
+        let sr_settings = SrSettings::new("http://localhost:8085".to_string());
+        let decoder = AvroDecoder::new(sr_settings);
         loop {
             for ms in consumer.poll().unwrap().iter() {
                 // Retrieve the MessageSet. There is at most one per topic.
                 for m in ms.messages() {
-                    let decoded = Arc::new(serde_json::from_slice::<T>(m.value).unwrap());
+                    
+                    let decoded_value =  decoder.decode(Some(m.value)).await.unwrap();
+                    let decoded: T = match serde_json::from_value(Value::try_from(decoded_value.value).unwrap()){
+                        Ok(value) => value,
+                        Err(e) => {
+                            eprintln!("Error while deserializing message: {:?}", e);
+                            continue;
+                        }
+                    };
                     let mut in_building_cars = in_building_cars.write().await;
 
                     // Check if in_building_cars is empty. If it's empty, push an empty InBuildingCar to be built.

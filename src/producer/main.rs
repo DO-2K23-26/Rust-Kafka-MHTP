@@ -62,10 +62,10 @@ async fn main() {
     let producer_set = JoinSet::new();
     let producer_arc = Arc::new(RwLock::new(producer_set));
 
-    // launch_producer::<Order>(producer_arc.clone());
-    // launch_producer::<Wheel>(producer_arc.clone());
-    // launch_producer::<Chassis>(producer_arc.clone());
-    launch_producer::<SoldCar>(producer_arc.clone());
+    launch_producer::<Order>(producer_arc.clone());
+    launch_producer::<Wheel>(producer_arc.clone());
+    launch_producer::<Chassis>(producer_arc.clone());
+    // launch_producer::<SoldCar>(producer_arc.clone());
 
     // Await all tasks
     let mut producer_lock = producer_arc.write().unwrap();
