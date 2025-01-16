@@ -15,21 +15,18 @@ pub async fn create_consumer<T>(
 ) where
     T: Consumable + Send + Sync + Clone +'static,
 {
-    let consumer = Consumer::from_hosts(vec!["localhost:19092".to_owned(),"localhost:29092".to_owned()])
+    let mut consumer = Consumer::from_hosts(vec!["localhost:19092".to_owned(),"localhost:29092".to_owned()])
         .with_topic_partitions(T::get_topic_name().to_owned(), &[0])
         .with_fallback_offset(FetchOffset::Earliest)
         .with_group("merger".to_owned())
         .with_offset_storage(Some(GroupOffsetStorage::Kafka))
         .create()
         .unwrap();
-    let consumer_arc = Arc::new(RwLock::new(consumer));
-    let consumer_clone = consumer_arc.clone();
 
     let mut client_set_lock = client_set.write().await;
     client_set_lock.spawn(async move {
-        let mut consumer_lock = consumer_clone.write().await;
         loop {
-            for ms in consumer_lock.poll().unwrap().iter() {
+            for ms in consumer.poll().unwrap().iter() {
                 // Retrieve the MessageSet. There is at most one per topic.
                 for m in ms.messages() {
                     let decoded = serde_json::from_slice::<T>(m.value).unwrap();
@@ -43,9 +40,9 @@ pub async fn create_consumer<T>(
                     let mut sold_cars = sold_cars.write().await;
                     check_mergeable(&mut *in_building_cars, &mut *sold_cars);
                 }
-                let _ =  consumer_lock.consume_messageset(ms);
+                let _ =  consumer.consume_messageset(ms);
             }
-            consumer_lock.commit_consumed().unwrap();
+            consumer.commit_consumed().unwrap();
         }
     });
 }
