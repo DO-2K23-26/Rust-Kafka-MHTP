@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::time::SystemTime;
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +18,7 @@ pub enum Component {
     WHEEL(Wheel),
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Copy)]
 pub struct Order {
     pub id: i32,
     pub brand: Brand,
@@ -27,17 +27,36 @@ pub struct Order {
     pub created_at: u64,
 }
 
+impl Debug for Order {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(f, "Order {{ id: {}, brand: {}, price: {}, quantity: {}, created_at: {} }}",
+        self.id, self.brand, self.price, self.quantity, self.created_at)
+    }
+}
 
-#[derive(Serialize, Deserialize, Clone)]
+
+#[derive(Serialize, Deserialize, Clone, Copy)]
 pub struct Wheel {
     pub brand: Brand,
     pub price: f64,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+impl Debug for Wheel {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(f, "Wheel {{ brand: {}, price: {} }}", self.brand, self.price)
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy)]
 pub struct Chassis {
     pub brand: Brand,
     pub price: f64,
+}
+
+impl Debug for Chassis {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(f, "Chassis {{ brand: {}, price: {} }}", self.brand, self.price)
+    }
 }
 
 pub trait Consumable: for<'de> Deserialize<'de> {

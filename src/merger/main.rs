@@ -17,7 +17,7 @@ async fn main() {
     let client_set = JoinSet::new();
     let client_arc = Arc::new(RwLock::new(client_set));
 
-    let _ = create_producer(client_arc.clone(), sold_cars.clone()).await;
+    let _ = create_producer(sold_cars.clone()).await;
     let _ = create_consumer::<Order>(
         client_arc.clone(),
         in_building_cars.clone(),
@@ -33,6 +33,7 @@ async fn main() {
         in_building_cars.clone(),
         sold_cars.clone(),
     ).await;
+
     // Await all tasks
     let mut client_lock = client_arc.write().await;
     while let Some(result) = client_lock.join_next().await {
