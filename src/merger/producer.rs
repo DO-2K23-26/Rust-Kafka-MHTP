@@ -17,8 +17,8 @@ pub async fn create_producer(sold_cars: Arc<RwLock<Vec<SoldCar>>>) {
     tokio::spawn(async move {
         loop {
             log::debug!("Producing one sold car to Kafka...");
-            let sold_cars = sold_cars.read().await;
-            for sold_car in sold_cars.iter() {
+            let mut sold_cars = sold_cars.write().await;
+            while let Some(sold_car) = sold_cars.pop() {
                 let encoded: Vec<u8> = bincode::serialize(&sold_car).unwrap();
                 producer
                     .send(&Record::from_value("SoldCar", encoded.as_slice()))
