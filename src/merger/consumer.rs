@@ -37,32 +37,33 @@ pub async fn create_consumer<T>(
                         in_building_cars.push(InBuildingCar::default());
                     }
 
-                    // Attach the component to the first car if the list isn't empty.
-                    if let Some(car) = in_building_cars.first_mut() {
-                        let attached = car.attach_component(decoded.to_component());
-                        println!("Attached component to car: {}", attached);
-
-                        if !attached {
-                            // If the component can't be attached, create a new empty car and attach the component to it.
-                            let mut new_car = InBuildingCar::default();
-                            let new_attached = new_car.attach_component(decoded.to_component());
-                            println!("Attached component to new car: {}", new_attached);
-
-                            if new_attached {
-                                in_building_cars.push(new_car);
-                            }
+                    let mut attached = false;
+                    for car in in_building_cars.iter_mut() {
+                        if car.attach_component(decoded.to_component()) {
+                            attached = true;
+                            break;
                         }
-
-                        let mut sold_cars = sold_cars.write().await;
-                        check_mergeable(&mut *in_building_cars, &mut *sold_cars);
-                        println!("length of in_building_cars: {}", in_building_cars.len());
-
-                        // Commit the single consumed message only if the component was attached. (!= only if the car is built and sold. Not as good as it could be.)
-                        consumer.consume_message(&T::get_topic_name(), 0, m.offset).unwrap();
                     }
+
+                    if !attached {
+                        let mut new_car = InBuildingCar::default();
+                        let new_attached = new_car.attach_component(decoded.to_component());
+                        println!("Attached component to new car: {}", new_attached);
+
+                        if new_attached {
+                            in_building_cars.push(new_car);
+                        }
+                    }
+
+                    let mut sold_cars = sold_cars.write().await;
+                    check_mergeable(&mut *in_building_cars, &mut *sold_cars);
+                    println!("length of in_building_cars: {}", in_building_cars.len());
+
+                    // Commit the single consumed message only if the component was attached.
+                    consumer.consume_message(&T::get_topic_name(), 0, m.offset).unwrap();
+                    consumer.commit_consumed().unwrap();
                 }
             }
-            consumer.commit_consumed().unwrap();
         }
     });
 }
