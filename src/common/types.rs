@@ -1,15 +1,14 @@
 use std::fmt::{Debug, Display, Formatter};
 use std::time::SystemTime;
-use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Copy,Default,PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Default, PartialEq, BuildSchema)]
 pub enum Brand {
     FERRARI,
     RENAULT,
     PEUGEOT,
     CITROEN,
     #[default]
-    BMW, 
+    BMW,
 }
 
 pub enum Component {
@@ -18,7 +17,7 @@ pub enum Component {
     WHEEL(Wheel),
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy)]
+#[derive(Serialize, Deserialize, Clone,Copy,BuildSchema)]
 pub struct Order {
     pub id: i32,
     pub brand: Brand,
@@ -35,7 +34,7 @@ impl Debug for Order {
 }
 
 
-#[derive(Serialize, Deserialize, Clone, Copy)]
+#[derive(Serialize, Deserialize, Clone,BuildSchema,Copy)]
 pub struct Wheel {
     pub brand: Brand,
     pub price: f64,
@@ -47,7 +46,7 @@ impl Debug for Wheel {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy)]
+#[derive(Serialize, Deserialize, Clone,BuildSchema,Copy)]
 pub struct Chassis {
     pub brand: Brand,
     pub price: f64,
@@ -94,7 +93,7 @@ impl Consumable for Wheel {
     }
 }
 
-#[derive(Serialize, Deserialize,Default, Copy, Clone)]
+#[derive(Serialize, Deserialize, Default, Copy, Clone,BuildSchema)]
 pub struct SoldCar {
     pub id: i32,
     pub brand: Brand,
@@ -105,7 +104,7 @@ pub struct SoldCar {
 pub trait Emittable: Serialize {
     fn generate() -> Self;
     fn get_topic_name() -> String;
-    fn get_frequency() -> u64; 
+    fn get_frequency() -> u64;
 }
 
 impl Emittable for SoldCar {
@@ -251,7 +250,6 @@ impl Emittable for Chassis {
     }
 }
 
-
 impl Display for Brand {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         match self {
@@ -263,4 +261,3 @@ impl Display for Brand {
         }
     }
 }
-
