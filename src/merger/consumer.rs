@@ -48,7 +48,7 @@ pub async fn create_consumer<T>(
                     if !attached {
                         let mut new_car = InBuildingCar::default();
                         let new_attached = new_car.attach_component(decoded.to_component());
-                        println!("Attached component to new car: {}", new_attached);
+                        log::debug!("Attached component to new car: {}", new_attached);
 
                         if new_attached {
                             in_building_cars.push(new_car);
@@ -57,7 +57,7 @@ pub async fn create_consumer<T>(
 
                     let mut sold_cars = sold_cars.write().await;
                     check_mergeable(&mut *in_building_cars, &mut *sold_cars);
-                    println!("length of in_building_cars: {}", in_building_cars.len());
+                    log::debug!("length of in_building_cars: {}", in_building_cars.len());
 
                     // Commit the single consumed message only if the component was attached.
                     consumer.consume_message(&T::get_topic_name(), 0, m.offset).unwrap();

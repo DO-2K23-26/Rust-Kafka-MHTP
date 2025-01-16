@@ -33,3 +33,5 @@ http = "0.2.6"
 url = "2.5.4"
 datafusion-data-access = { version = "8.0.0" }
 object_store = { version = "0.11.2", features = ["aws", "serde", "serde_json"] }
+log = "0.4.25"
+env_logger = "0.11.6"
