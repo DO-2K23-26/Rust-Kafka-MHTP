@@ -1,12 +1,9 @@
 use std::{error::Error, sync::Arc};
 
-use datafusion::{
-    arrow::{
+use datafusion::arrow::{
         array::{Float64Array, RecordBatch, StringArray, UInt64Array},
         datatypes::{DataType, Field, Schema},
-    },
-    physical_plan::memory::MemoryExec,
-};
+    };
 use Rust_Kafka_MHT::common::types::SoldCar;
 
 pub fn convert(sold_cars: Vec<SoldCar>) -> Result<RecordBatch, Box<dyn Error>> {
