@@ -21,7 +21,7 @@ pub async fn create_producer(sold_cars: Arc<RwLock<Vec<SoldCar>>>) {
             for sold_car in sold_cars.iter() {
                 let encoded: Vec<u8> = bincode::serialize(&sold_car).unwrap();
                 producer
-                    .send(&Record::from_value("sold_cars", encoded.as_slice()))
+                    .send(&Record::from_value("SoldCar", encoded.as_slice()))
                     .unwrap();
             }
         }
