@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+use serde_avro_derive::BuildSchema;
 use std::fmt::{Debug, Display, Formatter};
 use std::time::SystemTime;
 
@@ -17,7 +19,7 @@ pub enum Component {
     WHEEL(Wheel),
 }
 
-#[derive(Serialize, Deserialize, Clone,Copy,BuildSchema)]
+#[derive(Serialize, Deserialize, Clone, Copy, BuildSchema)]
 pub struct Order {
     pub id: i32,
     pub brand: Brand,
@@ -28,13 +30,15 @@ pub struct Order {
 
 impl Debug for Order {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "Order {{ id: {}, brand: {}, price: {}, quantity: {}, created_at: {} }}",
-        self.id, self.brand, self.price, self.quantity, self.created_at)
+        write!(
+            f,
+            "Order {{ id: {}, brand: {}, price: {}, quantity: {}, created_at: {} }}",
+            self.id, self.brand, self.price, self.quantity, self.created_at
+        )
     }
 }
 
-
-#[derive(Serialize, Deserialize, Clone,BuildSchema,Copy)]
+#[derive(Serialize, Deserialize, Clone, BuildSchema, Copy)]
 pub struct Wheel {
     pub brand: Brand,
     pub price: f64,
@@ -42,11 +46,15 @@ pub struct Wheel {
 
 impl Debug for Wheel {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "Wheel {{ brand: {}, price: {} }}", self.brand, self.price)
+        write!(
+            f,
+            "Wheel {{ brand: {}, price: {} }}",
+            self.brand, self.price
+        )
     }
 }
 
-#[derive(Serialize, Deserialize, Clone,BuildSchema,Copy)]
+#[derive(Serialize, Deserialize, Clone, BuildSchema, Copy)]
 pub struct Chassis {
     pub brand: Brand,
     pub price: f64,
@@ -54,7 +62,11 @@ pub struct Chassis {
 
 impl Debug for Chassis {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "Chassis {{ brand: {}, price: {} }}", self.brand, self.price)
+        write!(
+            f,
+            "Chassis {{ brand: {}, price: {} }}",
+            self.brand, self.price
+        )
     }
 }
 
@@ -93,7 +105,7 @@ impl Consumable for Wheel {
     }
 }
 
-#[derive(Serialize, Deserialize, Default, Copy, Clone,BuildSchema)]
+#[derive(Serialize, Deserialize, Default, Copy, Clone, BuildSchema)]
 pub struct SoldCar {
     pub id: i32,
     pub brand: Brand,
