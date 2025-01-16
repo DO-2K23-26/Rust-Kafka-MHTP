@@ -36,10 +36,9 @@ pub fn convert(sold_cars: Vec<SoldCar>) -> Result<Arc<MemoryExec>, Box<dyn Error
             df_array_created_at,
         ],
     )?;
-    let execution_plan = Arc::new(MemoryExec::try_new(
+    Ok(Arc::new(MemoryExec::try_new(
         &[vec![record_batch]],
         schema.clone(),
         None,
-    )?);
-    Ok(execution_plan)
+    )?))
 }
