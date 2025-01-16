@@ -24,8 +24,4 @@ Cargo.lock
 
 /target
 
-# Added by cargo
-
-/target
-
 /trino/config/hive/plugin

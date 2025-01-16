@@ -84,7 +84,7 @@ services:
         /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server broker-1:19092 --topic Order --partitions 1 --replication-factor 1 &&
         /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server broker-1:19092 --topic Wheel --partitions 1 --replication-factor 1 &&
         /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server broker-1:19092 --topic Chassis --partitions 1 --replication-factor 1 &&
-        /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server broker-1:19092 --topic SoldCar --partitions 1 --replication-factor 1 &&
+        /opt/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server broker-1:19092 --topic SoldCar --partitions 2 --replication-factor 1 &&
         echo "Kafka initialization complete.";'
 
 
@@ -105,19 +105,6 @@ services:
             docker-kafka-server:
               properties:
                 bootstrap.servers: "broker-1:19092,broker-2:19092"
-  minio:
-    image: quay.io/minio/minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - ${HOME}/minio/data:/data
-    command: server /data --console-address ":9001"
-    depends_on:
-      - create-data-dir
-    environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: minio123
       
 
   create-data-dir:

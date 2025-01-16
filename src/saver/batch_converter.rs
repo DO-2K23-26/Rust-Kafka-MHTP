@@ -9,7 +9,7 @@ use datafusion::{
 };
 use Rust_Kafka_MHT::common::types::SoldCar;
 
-pub fn convert(sold_cars: Vec<SoldCar>) -> Result<Arc<MemoryExec>, Box<dyn Error>> {
+pub fn convert(sold_cars: Vec<SoldCar>) -> Result<RecordBatch, Box<dyn Error>> {
     let schema = Arc::new(Schema::new(vec![
         Field::new("id", DataType::Utf8, false),
         Field::new("brand", DataType::Utf8, false),
@@ -36,9 +36,5 @@ pub fn convert(sold_cars: Vec<SoldCar>) -> Result<Arc<MemoryExec>, Box<dyn Error
             df_array_created_at,
         ],
     )?;
-    Ok(Arc::new(MemoryExec::try_new(
-        &[vec![record_batch]],
-        schema.clone(),
-        None,
-    )?))
+    Ok(record_batch)
 }
