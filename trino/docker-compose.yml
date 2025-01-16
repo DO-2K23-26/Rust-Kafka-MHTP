@@ -11,12 +11,27 @@ services:
       - minio
       - metastore
 
+  init-metastore:
+    image: busybox:latest
+    command: ['sh', '-c', 'wget -O /jars/aws-java-sdk-bundle-1.11.1026.jar https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.11.1026/aws-java-sdk-bundle-1.11.1026.jar && wget -O /jars/hadoop-aws-3.3.6.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.6/hadoop-aws-3.3.6.jar && touch /jars/ready ;']
+    volumes:
+      - ./config/hive/plugin:/jars
+
   metastore:
-    image: apache/hive:3.1.3
-    ports:
-      - "9083:9083"
+    image: apache/hive:4.0.1
+    container_name: hive-metastore
     environment:
-      - SERVICE_NAME=metastore
+      SERVICE_NAME: metastore
+    depends_on:
+      init-metastore:
+        condition: service_completed_successfully
+    ports:
+      - '9083:9083'
+    volumes:
+      - ./config/hive/hive-site.xml:/opt/hive/conf/hive-site.xml
+      - ./config/hive/plugin/aws-java-sdk-bundle-1.11.1026.jar:/opt/hive/lib/aws-java-sdk-bundle-1.11.1026.jar
+      - ./config/hive/plugin/hadoop-aws-3.3.6.jar:/opt/hive/lib/hadoop-aws-3.3.6.jar
+
   minio:
     image: minio/minio
     ports:
@@ -32,15 +47,37 @@ services:
       timeout: 20s
       retries: 3
 
-  # Initialize MinIO with a bucket
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=trino-datasource
+    volumes:
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - trino
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      grafana cli plugins install trino-datasource || exit 1;
+      /run.sh
+      "
+      
+
   createbuckets:
     image: minio/mc
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
     entrypoint: >
       /bin/sh -c "
       /usr/bin/mc config host add myminio http://minio:9000 minio minio123;
       /usr/bin/mc mb myminio/data-bucket;
       /usr/bin/mc anonymous set public myminio/data-bucket;
+      /usr/bin/mc admin user svcacct add myminio minio --access-key minio_access_key --secret-key minio_secret_key;
+      /usr/bin/mc mb myminio/data-bucket/data;
       exit 0;
       "
