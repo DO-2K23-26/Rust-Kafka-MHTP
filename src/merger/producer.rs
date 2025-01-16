@@ -8,7 +8,7 @@ use tokio::task::JoinSet;
 use crate::common::types::SoldCar;
 
 pub async fn create_producer(client_set: Arc<RwLock<JoinSet<()>>>, sold_cars: Arc<RwLock<Vec<SoldCar>>>) {
-    let producer = Producer::from_hosts(vec!["localhost:9092".to_owned()])
+    let producer = Producer::from_hosts(vec!["localhost:19092".to_owned(),"localhost:29092".to_owned()])
         .with_ack_timeout(Duration::from_secs(1))
         .with_required_acks(RequiredAcks::One)
         .create()
