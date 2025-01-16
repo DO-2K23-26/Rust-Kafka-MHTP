@@ -13,9 +13,9 @@ pub async fn create_consumer<T>(
     in_building_cars: Arc<RwLock<Vec<InBuildingCar>>>,
     sold_cars: Arc<RwLock<Vec<SoldCar>>>,
 ) where
-    T: Consumable + Send + Sync + Clone +'static,
+    T: Consumable + Send + Sync + Clone + Copy + 'static,
 {
-    let mut consumer = Consumer::from_hosts(vec!["localhost:19092".to_owned(),"localhost:29092".to_owned()])
+    let mut consumer = Consumer::from_hosts(vec!["localhost:19092".to_owned(), "localhost:29092".to_owned()])
         .with_topic_partitions(T::get_topic_name().to_owned(), &[0])
         .with_fallback_offset(FetchOffset::Earliest)
         .with_group("merger".to_owned())
@@ -29,18 +29,38 @@ pub async fn create_consumer<T>(
             for ms in consumer.poll().unwrap().iter() {
                 // Retrieve the MessageSet. There is at most one per topic.
                 for m in ms.messages() {
-                    let decoded = serde_json::from_slice::<T>(m.value).unwrap();
+                    let decoded = Arc::new(serde_json::from_slice::<T>(m.value).unwrap());
                     let mut in_building_cars = in_building_cars.write().await;
+
+                    // Check if in_building_cars is empty. If it's empty, push an empty InBuildingCar to be built.
+                    if in_building_cars.is_empty() {
+                        in_building_cars.push(InBuildingCar::default());
+                    }
 
                     // Attach the component to the first car if the list isn't empty.
                     if let Some(car) = in_building_cars.first_mut() {
-                        car.attach_component(decoded.to_component());
-                    }
+                        let attached = car.attach_component(decoded.to_component());
+                        println!("Attached component to car: {}", attached);
 
-                    let mut sold_cars = sold_cars.write().await;
-                    check_mergeable(&mut *in_building_cars, &mut *sold_cars);
+                        if !attached {
+                            // If the component can't be attached, create a new empty car and attach the component to it.
+                            let mut new_car = InBuildingCar::default();
+                            let new_attached = new_car.attach_component(decoded.to_component());
+                            println!("Attached component to new car: {}", new_attached);
+
+                            if new_attached {
+                                in_building_cars.push(new_car);
+                            }
+                        }
+
+                        let mut sold_cars = sold_cars.write().await;
+                        check_mergeable(&mut *in_building_cars, &mut *sold_cars);
+                        println!("length of in_building_cars: {}", in_building_cars.len());
+
+                        // Commit the single consumed message only if the component was attached. (!= only if the car is built and sold. Not as good as it could be.)
+                        consumer.consume_message(&T::get_topic_name(), 0, m.offset).unwrap();
+                    }
                 }
-                let _ =  consumer.consume_messageset(ms);
             }
             consumer.commit_consumed().unwrap();
         }

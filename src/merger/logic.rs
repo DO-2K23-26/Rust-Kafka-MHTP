@@ -4,6 +4,7 @@ use serde::{Serialize, Deserialize};
 //use std::sync::Arc;
 //use tokio::sync::RwLock;
 
+use std::fmt::Debug;
 use std::time::SystemTime;
 
 use crate::common::types::{Brand, Chassis, Order, Wheel, SoldCar};
@@ -25,6 +26,23 @@ pub struct InBuildingCar {
     pub order: Option<Order>,
     pub chassis: Option<Chassis>,
     pub wheels: [Option<Wheel>; 4],
+}
+
+impl InBuildingCar {
+    pub fn default() -> Self {
+        InBuildingCar {
+            order: None,
+            chassis: None,
+            wheels: [None, None, None, None],
+        }
+    }
+}
+
+impl Debug for InBuildingCar {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "InBuildingCar {{ order: {:?}, chassis: {:?}, wheels: [{:?}, {:?}, {:?}, {:?}] }}",
+        self.order, self.chassis, self.wheels[0], self.wheels[1], self.wheels[2], self.wheels[3])
+    }
 }
 
 pub trait Buildable {
@@ -79,7 +97,9 @@ pub fn check_mergeable(in_building_cars: &mut Vec<InBuildingCar>, sold_cars: &mu
             let brand = order.brand.clone();
             let wheels = [wheel1.clone(), wheel2.clone(), wheel3.clone(), wheel4.clone()];
             let sold_car = InBuildingCar::merge(order.clone(), chassis.clone(), brand, wheels);
+            println!("MERGINGTHISCARMERGINGTHISCARMERGINGTHISCARMERGINGTHISCARMERGINGTHISCARMERGINGTHISCARMERGINGTHISCARMERGINGTHISCARMERGINGTHISCARMERGINGTHISCAR");
             sold_cars.push(sold_car);
+            println!("length of sold_cars: {}", sold_cars.len());
         } else {
             in_building_cars.insert(i, in_building_car);
             i += 1;
