@@ -104,7 +104,7 @@ impl Emittable for SoldCar {
                 _ => Brand::BMW,
             },
             price: rng.gen_range(20000.0..150000.0),
-            created_at: chrono::Utc::now().timestamp(),
+            created_at: SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs(),
         }
     }
 
