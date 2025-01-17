@@ -3,6 +3,7 @@ apiVersion: 1
 datasources:
   - name: Trino
     type: trino-datasource
+    uid: PD73EC80E50767796
     access: proxy
     url: http://trino:8080
     basicAuth: false
