@@ -15,7 +15,7 @@ use schema_registry_converter::{
 
 use serde_avro_derive::BuildSchema;
 use tokio::task::JoinSet;
-use Rust_Kafka_MHT::common::types::{Chassis, Emittable, Order, SoldCar, Wheel};
+use Rust_Kafka_MHT::common::types::{Emittable, SoldCar};
 
 mod schema_register;
 

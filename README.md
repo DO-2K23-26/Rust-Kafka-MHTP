@@ -5,7 +5,7 @@
 ### 1. Start the stack
 
 ```bash
-docker-compose -f docker-compose.yml -f trino/docker-compose.yml up
+docker compose -f docker-compose.yml -f trino/docker-compose.yml up
 ```
 
 ### 2. Build and run the Rust application
@@ -15,9 +15,9 @@ cargo build --bin producer --bin merger --bin saver
 ```
 
 ```bash
-/target/debug/producer
-/target/debug/merger
-/target/debug/saver
+./target/debug/producer
+./target/debug/merger
+./target/debug/saver
 ```
 
 ### 3. Now you can access all the services and notably the grafana dashboard at http://localhost:3000

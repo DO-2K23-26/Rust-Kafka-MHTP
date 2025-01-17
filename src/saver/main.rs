@@ -80,7 +80,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             let df = ctx.read_batch(execution_plan).unwrap();
                             let file_name = format!("s3://data-bucket/data/{}{}{}.parquet", "SoldCar", partition_id, m.offset);
                             match df.write_parquet(&file_name, DataFrameWriteOptions::new(), None).await {
-                                Ok(_) => println!("wrote parquet"),
+                                Ok(_) => {},
                                 Err(e) => {
                                     eprintln!("Error writing parquet: {:?}", e);
                                     return Err(Box::new(kafka::Error::Kafka(KafkaCode::ClusterAuthorizationFailed)));
@@ -98,7 +98,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         handles.push(handle);
     }
 
-    println!("Waiting for all handles to finish");
 
     for handle in handles {
         handle.await??;
