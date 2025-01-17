@@ -11,9 +11,45 @@ services:
       - minio
       - metastore
 
+  init-trino:
+    image: trinodb/trino:latest
+    depends_on:
+      trino:
+        condition: service_healthy
+      init-minio:
+        condition: service_completed_successfully
+    entrypoint: >
+      /bin/sh -c "
+      until curl -s http://trino:8080/v1/info; do
+        echo 'Waiting for Trino to be ready...';
+        sleep 5;
+      done;
+      trino --server trino:8080 --execute \"
+      CREATE TABLE hive.default.sold_car (
+        id varchar,
+        brand VARCHAR,
+        price double,
+        created_at int
+      )
+      WITH (
+        external_location = 's3a://data-bucket/data/',
+        format = 'parquet'
+      );
+      \";
+      exit 0;
+        "
   init-metastore:
     image: busybox:latest
-    command: ['sh', '-c', 'wget -O /jars/aws-java-sdk-bundle-1.11.1026.jar https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.11.1026/aws-java-sdk-bundle-1.11.1026.jar && wget -O /jars/hadoop-aws-3.3.6.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.6/hadoop-aws-3.3.6.jar && touch /jars/ready ;']
+    command: >
+      sh -c "
+      if [ ! -f /jars/aws-java-sdk-bundle-1.11.1026.jar ]; then
+        wget -O /jars/aws-java-sdk-bundle-1.11.1026.jar https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.11.1026/aws-java-sdk-bundle-1.11.1026.jar;
+      fi;
+      if [ ! -f /jars/hadoop-aws-3.3.6.jar ]; then
+        wget -O /jars/hadoop-aws-3.3.6.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.6/hadoop-aws-3.3.6.jar;
+      fi;
+      touch /jars/ready;
+      "
     volumes:
       - ./config/hive/plugin:/jars
 
@@ -57,6 +93,7 @@ services:
       - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=trino-datasource
     volumes:
       - ./config/grafana/provisioning:/etc/grafana/provisioning
+      - ./config/grafana/data/dashboards:/var/lib/grafana/dashboards
     depends_on:
       - trino
       - minio
@@ -67,7 +104,7 @@ services:
       "
       
 
-  createbuckets:
+  init-minio:
     image: minio/mc
     depends_on:
       minio:
